@@ -59,11 +59,6 @@ var OneapiLinuxGlobs = []string{
 	"/usr/lib*/libze_intel_gpu.so*",
 }
 
-var OneapiLinuxGlobs = []string{
-	"/usr/lib/x86_64-linux-gnu/libze_intel_gpu.so*",
-	"/usr/lib*/libze_intel_gpu.so*",
-}
-
 // Note: gpuMutex must already be held
 func initGPUHandles() {
 
@@ -97,16 +92,6 @@ func initGPUHandles() {
 		if cuda != nil {
 			slog.Info("Nvidia GPU detected")
 			gpuHandles.cuda = cuda
-			return
-		}
-	}
-
-	oneapiLibPaths := FindGPULibs(oneapiMgmtName, oneapiMgmtPatterns)
-	if len(oneapiLibPaths) > 0 {
-		oneapi := LoadOneapiMgmt(oneapiLibPaths)
-		if oneapi != nil {
-			slog.Info("Intel GPU detected")
-			gpuHandles.oneapi = oneapi
 			return
 		}
 	}
@@ -180,11 +165,6 @@ func GetGPUInfo() GpuInfo {
 			}
 			resp.Library = "oneapi"
 		}
-	} else {
-		AMDGetGPUInfo(&resp)
-		if resp.Library != "" {
-			return resp
-		}
 	} else if gpuHandles.oneapi != nil && (cpuVariant != "" || runtime.GOARCH != "amd64") {
 		C.oneapi_check_vram(*gpuHandles.oneapi, &memInfo)
 		if memInfo.err != nil {
@@ -206,6 +186,11 @@ func GetGPUInfo() GpuInfo {
 				slog.Info(fmt.Sprintf("oneAPI integrated GPU detected - SYCL_DEVICE_ALLOWLIST=%s", val))
 			}
 			resp.Library = "oneapi"
+		}
+	} else {
+		AMDGetGPUInfo(&resp)
+		if resp.Library != "" {
+			return resp
 		}
 	}
 	if resp.Library == "" {
@@ -330,23 +315,6 @@ func LoadCUDAMgmt(cudaLibPaths []string) *C.cuda_handle_t {
 			C.free(unsafe.Pointer(resp.err))
 		} else {
 			return &resp.ch
-		}
-	}
-	return nil
-}
-
-func LoadOneapiMgmt(rocmLibPaths []string) *C.oneapi_handle_t {
-	var resp C.oneapi_init_resp_t
-	resp.oh.verbose = getVerboseState()
-	for _, libPath := range rocmLibPaths {
-		lib := C.CString(libPath)
-		defer C.free(unsafe.Pointer(lib))
-		C.oneapi_init(lib, &resp)
-		if resp.err != nil {
-			slog.Info(fmt.Sprintf("Unable to load oneAPI management library %s: %s", libPath, C.GoString(resp.err)))
-			C.free(unsafe.Pointer(resp.err))
-		} else {
-			return &resp.oh
 		}
 	}
 	return nil
