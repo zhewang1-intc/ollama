@@ -165,28 +165,6 @@ func GetGPUInfo() GpuInfo {
 			}
 			resp.Library = "oneapi"
 		}
-	} else if gpuHandles.oneapi != nil && (cpuVariant != "" || runtime.GOARCH != "amd64") {
-		C.oneapi_check_vram(*gpuHandles.oneapi, &memInfo)
-		if memInfo.err != nil {
-			slog.Info(fmt.Sprintf("error looking up OneAPI GPU memory: %s", C.GoString(memInfo.err)))
-			C.free(unsafe.Pointer(memInfo.err))
-		} else if memInfo.igpu_index >= 0 && memInfo.count == 1 {
-			// Only one GPU detected and it appears to be an integrated GPU - skip it
-			slog.Info("OneAPI unsupported integrated GPU detected")
-		} else if memInfo.count > 0 {
-			if memInfo.igpu_index >= 0 {
-				// We have multiple GPUs reported, and one of them is an integrated GPU
-				// so we have to set the env var to bypass it
-				// If the user has specified their own SYCL_DEVICE_ALLOWLIST, don't clobber it
-				val := os.Getenv("SYCL_DEVICE_ALLOWLIST")
-				if val == "" {
-					val = "DeviceType:gpu"
-					os.Setenv("SYCL_DEVICE_ALLOWLIST", val)
-				}
-				slog.Info(fmt.Sprintf("oneAPI integrated GPU detected - SYCL_DEVICE_ALLOWLIST=%s", val))
-			}
-			resp.Library = "oneapi"
-		}
 	} else {
 		AMDGetGPUInfo(&resp)
 		if resp.Library != "" {
