@@ -84,3 +84,13 @@ docker build \
     -f Dockerfile \
     -t ollama/ollama:$VERSION-oneapi \
     .
+
+docker build \
+    --load \
+    --platform=linux/amd64 \
+    --build-arg=VERSION \
+    --build-arg=GOFLAGS \
+    --target runtime-oneapi \
+    -f Dockerfile \
+    -t ollama/ollama:$VERSION-oneapi \
+    .

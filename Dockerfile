@@ -58,6 +58,15 @@ WORKDIR /go/src/github.com/jmorganca/ollama/llm/generate
 ARG CGO_CFLAGS
 RUN OLLAMA_SKIP_CPU_GENERATE=1 sh gen_linux.sh
 
+FROM --platform=linux/amd64 intel/oneapi-basekit:2024.0.1-devel-rockylinux9 AS oneapi-build-amd64
+ARG CMAKE_VERSION
+COPY ./scripts/rh_linux_deps.sh /
+RUN CMAKE_VERSION=${CMAKE_VERSION} sh /rh_linux_deps.sh
+COPY --from=llm-code / /go/src/github.com/jmorganca/ollama/
+WORKDIR /go/src/github.com/jmorganca/ollama/llm/generate
+ARG CGO_CFLAGS
+RUN OLLAMA_SKIP_CPU_GENERATE=1 sh gen_linux.sh
+
 FROM --platform=linux/amd64 centos:7 AS cpu-builder-amd64
 ARG CMAKE_VERSION
 ARG GOLANG_VERSION
