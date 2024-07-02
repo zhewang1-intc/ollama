@@ -3,6 +3,7 @@
 #include "gpu_info_oneapi.h"
 
 #include <string.h>
+#include <sys/sysinfo.h>
 
 void oneapi_init(char *oneapi_lib_path, oneapi_init_resp_t *resp) {
   ze_result_t ret;
@@ -254,6 +255,13 @@ int oneapi_get_device_count(oneapi_handle_t h, int driver) {
     return 0;
   }
   return (int)h.num_devices[driver];
+}
+
+uint64_t check_host_mem(enum mem_check_type check_type){
+  struct sysinfo si;
+  sysinfo(&si);
+  if(check_type == total_mem) return si.totalram;
+  if(check_type == free_mem) return si.freeram;
 }
 
 #endif // __APPLE__

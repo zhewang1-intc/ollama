@@ -199,5 +199,11 @@ void oneapi_check_vram(oneapi_handle_t h, int driver, int device,
 void oneapi_release(oneapi_handle_t h);
 int oneapi_get_device_count(oneapi_handle_t h, int driver);
 
+enum mem_check_type {
+  total_mem,
+  free_mem
+};
+
+uint64_t check_host_mem(enum mem_check_type check_type);
 #endif // __GPU_INFO_INTEL_H__
 #endif // __APPLE__

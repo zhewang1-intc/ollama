@@ -36,6 +36,13 @@ type oneapiHandles struct {
 	deviceCount int
 }
 
+type oneapiHostMemCheck int
+
+const (
+	totalHostMem oneapiHostMemCheck = iota
+	freeHostMem
+)
+
 const (
 	cudaMinimumMemory = 457 * format.MebiByte
 	rocmMinimumMemory = 457 * format.MebiByte
@@ -312,6 +319,10 @@ func GetGPUInfo() GpuInfoList {
 					gpuInfo.FreeMemory = uint64(memInfo.free)
 					gpuInfo.ID = C.GoString(&memInfo.gpu_id[0])
 					gpuInfo.Name = C.GoString(&memInfo.gpu_name[0])
+					if strings.Contains(gpuInfo.Name, "Arc") && gpuInfo.TotalMemory == 0 {
+						gpuInfo.FreeMemory = uint64(C.check_host_mem(uint32(freeHostMem)))
+						gpuInfo.TotalMemory = uint64(C.check_host_mem(uint32(totalHostMem)))
+					}
 					gpuInfo.DependencyPath = depPath
 					oneapiGPUs = append(oneapiGPUs, gpuInfo)
 				}
@@ -402,6 +413,9 @@ func GetGPUInfo() GpuInfoList {
 			// TODO - convert this to MinimumMemory based on testing...
 			var totalFreeMem float64 = float64(memInfo.free) * 0.95 // work-around: leave some reserve vram for mkl lib used in ggml-sycl backend.
 			memInfo.free = C.uint64_t(totalFreeMem)
+			if strings.Contains(C.GoString(&memInfo.gpu_name[0]), "Arc") && uint64(memInfo.total) == 0 {
+				memInfo.free = C.uint64_t(C.check_host_mem(uint32(freeHostMem)))
+			}
 			oneapiGPUs[i].FreeMemory = uint64(memInfo.free)
 		}
 
