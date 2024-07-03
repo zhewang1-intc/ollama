@@ -31,6 +31,7 @@ void oneapi_init(char *oneapi_lib_path, oneapi_init_resp_t *resp) {
        (void *)&resp->oh.zesDeviceEnumMemoryModules},
       {"zesMemoryGetProperties", (void *)&resp->oh.zesMemoryGetProperties},
       {"zesMemoryGetState", (void *)&resp->oh.zesMemoryGetState},
+      {"zesDevicePciGetProperties", (void *)&resp->oh.zesDevicePciGetProperties},
       {NULL, NULL},
   };
 
@@ -159,6 +160,14 @@ void oneapi_check_vram(oneapi_handle_t h, int driver, int device,
   zes_device_properties_t props;
   props.stype = ZES_STRUCTURE_TYPE_DEVICE_PROPERTIES;
   props.pNext = &ext_props;
+
+  zes_pci_properties_t pci_props;
+  pci_props.stype = ZES_STRUCTURE_TYPE_PCI_PROPERTIES;
+  pci_props.pNext = NULL;
+
+  ret = (*h.zesDevicePciGetProperties)(h.devices[driver][device], &pci_props);
+  LOG(h.verbose, "[%d:%d] oneAPI pci_device: %#X\n", driver, device,
+        pci_props.address.device);
 
   ret = (*h.zesDeviceGetProperties)(h.devices[driver][device], &props);
   if (ret != ZE_RESULT_SUCCESS) {

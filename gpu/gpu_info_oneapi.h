@@ -18,18 +18,63 @@ typedef uint8_t ze_bool_t;
 typedef struct _zes_driver_handle_t *zes_driver_handle_t;
 typedef struct _zes_device_handle_t *zes_device_handle_t;
 typedef struct _zes_mem_handle_t *zes_mem_handle_t;
-
-typedef enum _ze_structure_type_t {
-  ZE_STRUCTURE_TYPE_FORCE_UINT32 = 0x7fffffff
-} ze_structure_type_t;
+typedef struct _zes_pci_properties_t zes_pci_properties_t;
 
 typedef enum _zes_structure_type_t {
   ZES_STRUCTURE_TYPE_DEVICE_PROPERTIES = 0x1,
+  ZES_STRUCTURE_TYPE_PCI_PROPERTIES = 0x2,
   ZES_STRUCTURE_TYPE_MEM_PROPERTIES = 0xb,
   ZES_STRUCTURE_TYPE_MEM_STATE = 0x1e,
   ZES_STRUCTURE_TYPE_DEVICE_EXT_PROPERTIES = 0x2d,
   ZES_STRUCTURE_TYPE_FORCE_UINT32 = 0x7fffffff
 } zes_structure_type_t;
+
+
+/// @brief PCI address
+typedef struct _zes_pci_address_t
+{
+    uint32_t domain;                                                        ///< [out] BDF domain
+    uint32_t bus;                                                           ///< [out] BDF bus
+    uint32_t device;                                                        ///< [out] BDF device
+    uint32_t function;                                                      ///< [out] BDF function
+
+} zes_pci_address_t;
+
+///////////////////////////////////////////////////////////////////////////////
+/// @brief PCI speed
+typedef struct _zes_pci_speed_t
+{
+    int32_t gen;                                                            ///< [out] The link generation. A value of -1 means that this property is
+                                                                            ///< unknown.
+    int32_t width;                                                          ///< [out] The number of lanes. A value of -1 means that this property is
+                                                                            ///< unknown.
+    int64_t maxBandwidth;                                                   ///< [out] The maximum bandwidth in bytes/sec (sum of all lanes). A value
+                                                                            ///< of -1 means that this property is unknown.
+
+} zes_pci_speed_t;
+
+///////////////////////////////////////////////////////////////////////////////
+/// @brief Static PCI properties
+typedef struct _zes_pci_properties_t
+{
+    zes_structure_type_t stype;                                             ///< [in] type of this structure
+    void* pNext;                                                            ///< [in,out][optional] must be null or a pointer to an extension-specific
+                                                                            ///< structure (i.e. contains stype and pNext).
+    zes_pci_address_t address;                                              ///< [out] The BDF address
+    zes_pci_speed_t maxSpeed;                                               ///< [out] Fastest port configuration supported by the device (sum of all
+                                                                            ///< lanes)
+    ze_bool_t haveBandwidthCounters;                                        ///< [out] Indicates whether the `rxCounter` and `txCounter` members of
+                                                                            ///< ::zes_pci_stats_t will have valid values
+    ze_bool_t havePacketCounters;                                           ///< [out] Indicates whether the `packetCounter` member of
+                                                                            ///< ::zes_pci_stats_t will have a valid value
+    ze_bool_t haveReplayCounters;                                           ///< [out] Indicates whether the `replayCounter` member of
+                                                                            ///< ::zes_pci_stats_t will have a valid value
+
+} zes_pci_properties_t;
+
+typedef enum _ze_structure_type_t {
+  ZE_STRUCTURE_TYPE_FORCE_UINT32 = 0x7fffffff
+} ze_structure_type_t;
 
 typedef enum _zes_mem_type_t {
   ZES_MEM_TYPE_FORCE_UINT32 = 0x7fffffff
@@ -180,7 +225,7 @@ typedef struct oneapi_handle {
                                         zes_mem_properties_t *pProperties);
   ze_result_t (*zesMemoryGetState)(zes_mem_handle_t hMemory,
                                    zes_mem_state_t *pState);
-
+  ze_result_t (*zesDevicePciGetProperties)(zes_device_handle_t hDevice, zes_pci_properties_t *pProperties);
 } oneapi_handle_t;
 
 typedef struct oneapi_init_resp {
