@@ -18,6 +18,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"syscall"
 	"unsafe"
 
 	"github.com/ollama/ollama/envconfig"
@@ -173,6 +174,18 @@ func GetCPUInfo() GpuInfoList {
 	return GpuInfoList{cpus[0].GpuInfo}
 }
 
+func DetectInteliGpuMemStatus(gpuInfo *OneapiGPUInfo) {
+	var mem syscall.Sysinfo_t
+	err := syscall.Sysinfo(&mem)
+	if err != nil {
+		slog.Warn("error looking up system memory", "error", err)
+		return
+	}
+	// there will be half of total ram can be handle as iGPU vram
+	gpuInfo.FreeMemory = mem.Totalram / 2
+	gpuInfo.TotalMemory = (mem.Totalram / 2) - envconfig.IntelUsedSystemVRAM
+}
+
 func GetGPUInfo() GpuInfoList {
 	// TODO - consider exploring lspci (and equivalent on windows) to check for
 	// GPUs so we can report warnings if we see Nvidia/AMD but fail to load the libraries
@@ -312,6 +325,11 @@ func GetGPUInfo() GpuInfoList {
 					gpuInfo.FreeMemory = uint64(memInfo.free)
 					gpuInfo.ID = C.GoString(&memInfo.gpu_id[0])
 					gpuInfo.Name = C.GoString(&memInfo.gpu_name[0])
+					// now level-zero dosen't support iGPU mem status detection, 0 byte vram is a sign of iGPU
+					gpuInfo.isiGPU = gpuInfo.TotalMemory == 0
+					if envconfig.InteliGpu && gpuInfo.isiGPU {
+						DetectInteliGpuMemStatus(&gpuInfo)
+					}
 					gpuInfo.DependencyPath = depPath
 					oneapiGPUs = append(oneapiGPUs, gpuInfo)
 				}
@@ -406,6 +424,9 @@ func GetGPUInfo() GpuInfoList {
 			var totalFreeMem float64 = float64(memInfo.free) * 0.95 // work-around: leave some reserve vram for mkl lib used in ggml-sycl backend.
 			memInfo.free = C.uint64_t(totalFreeMem)
 			oneapiGPUs[i].FreeMemory = uint64(memInfo.free)
+			if envconfig.InteliGpu && gpu.isiGPU {
+				DetectInteliGpuMemStatus(&oneapiGPUs[i])
+			}
 		}
 
 		err = RocmGPUInfoList(rocmGPUs).RefreshFreeMemory()
