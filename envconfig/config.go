@@ -94,7 +94,7 @@ func AsMap() map[string]EnvVar {
 		"OLLAMA_MAX_LOADED_MODELS":      {"OLLAMA_MAX_LOADED_MODELS", MaxRunners, "Maximum number of loaded models per GPU"},
 		"OLLAMA_MAX_QUEUE":              {"OLLAMA_MAX_QUEUE", MaxQueuedRequests, "Maximum number of queued requests"},
 		"OLLAMA_MAX_VRAM":               {"OLLAMA_MAX_VRAM", MaxVRAM, "Maximum VRAM"},
-		"OLLAMA_INTEL_USED_SYSTEM_VRAM": {"OLLAMA_INTEL_USED_SYSTEM_VRAM", IntelUsedSystemVRAM, "Maximum VRAM"},
+		"OLLAMA_INTEL_USED_SYSTEM_VRAM": {"OLLAMA_INTEL_USED_SYSTEM_VRAM", IntelUsedSystemVRAM, "Intel iGPU used system-VRAM"},
 		"OLLAMA_MODELS":                 {"OLLAMA_MODELS", ModelsDir, "The path to the models directory"},
 		"OLLAMA_NOHISTORY":              {"OLLAMA_NOHISTORY", NoHistory, "Do not preserve readline history"},
 		"OLLAMA_NOPRUNE":                {"OLLAMA_NOPRUNE", NoPrune, "Do not prune model blobs on startup"},
