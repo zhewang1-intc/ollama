@@ -19,8 +19,5 @@ func GetCPUCapability() CPUCapability {
 }
 
 func IsIntelCoreUltraCpus() bool {
-	if strings.Contains(cpuid.CPU.BrandName, "Core(TM) Ultra") {
-		return true
-	}
-	return false
+	return strings.Contains(cpuid.CPU.BrandName, "Core(TM) Ultra")
 }
