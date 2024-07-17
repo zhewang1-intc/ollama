@@ -1,6 +1,9 @@
 package gpu
 
 import (
+	"strings"
+
+	"github.com/klauspost/cpuid/v2"
 	"golang.org/x/sys/cpu"
 )
 
@@ -13,4 +16,11 @@ func GetCPUCapability() CPUCapability {
 	}
 	// else LCD
 	return CPUCapabilityNone
+}
+
+func IsIntelCoreUltraCpus() bool {
+	if strings.Contains(cpuid.CPU.BrandName, "Core(TM) Ultra") {
+		return true
+	}
+	return false
 }
