@@ -61,6 +61,8 @@ var (
 	TmpDir string
 	// Set via OLLAMA_INTEL_GPU in the environment
 	IntelGpu bool
+	// Set via OLLAMA_FORCE_ENABLE_INTEL_IGPU in the environment
+	ForceEnableIntelIGPU bool
 
 	// Set via CUDA_VISIBLE_DEVICES in the environment
 	CudaVisibleDevices string
@@ -106,6 +108,7 @@ func AsMap() map[string]EnvVar {
 		ret["GPU_DEVICE_ORDINAL"] = EnvVar{"GPU_DEVICE_ORDINAL", GpuDeviceOrdinal, "Set which AMD devices are visible"}
 		ret["HSA_OVERRIDE_GFX_VERSION"] = EnvVar{"HSA_OVERRIDE_GFX_VERSION", HsaOverrideGfxVersion, "Override the gfx used for all detected AMD GPUs"}
 		ret["OLLAMA_INTEL_GPU"] = EnvVar{"OLLAMA_INTEL_GPU", IntelGpu, "Enable experimental Intel GPU detection"}
+		ret["OLLAMA_FORCE_ENABLE_INTEL_IGPU"] = EnvVar{"OLLAMA_FORCE_ENABLE_INTEL_IGPU", ForceEnableIntelIGPU, "froce enable Intel iGPUs"}
 	}
 	return ret
 }
@@ -287,6 +290,10 @@ func LoadConfig() {
 
 	if set, err := strconv.ParseBool(clean("OLLAMA_INTEL_GPU")); err == nil {
 		IntelGpu = set
+	}
+
+	if set, err := strconv.ParseBool(clean("OLLAMA_FORCE_ENABLE_INTEL_IGPU")); err == nil {
+		ForceEnableIntelIGPU = set
 	}
 
 	CudaVisibleDevices = clean("CUDA_VISIBLE_DEVICES")
